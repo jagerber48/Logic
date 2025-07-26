@@ -1,0 +1,1121 @@
+\documentclass[12pt]{article}
+
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{amsthm}
+\usepackage{glossaries}
+\usepackage{braket}
+\usepackage{bussproofs}
+
+\makeatletter
+\newtheoremstyle{break}% name
+{12pt}%         Space above, empty = `usual value'
+{12pt}%         Space below
+{\addtolength{\@totalleftmargin}{1.5em}
+	\addtolength{\linewidth}{-3em}
+	\parshape 1 1.5em \linewidth
+	\itshape}% Body font
+{}%         Indent amount (empty = no indent, \parindent = para indent)
+{\bfseries}% Thm head font
+{}%        Punctuation after thm head
+{\newline}% Space after thm head: \newline = linebreak
+{}%         Thm head spec
+\theoremstyle{break}
+\newtheorem{definition}{Definition}[section]
+\theoremstyle{break}
+\newtheorem{theorem}{Theorem}[section]
+\theoremstyle{break}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{break}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{break}
+\newtheorem{informal definition}[definition]{Informal Definition}
+\theoremstyle{break}
+\newtheorem{informal theorem}[theorem]{Informal Theorem}
+
+\newcommand{\bv}[1]{\boldsymbol{#1}}
+\newcommand{\mc}[1]{\mathcal{#1}}
+\newcommand{\bc}[1]{\bv{\mc{#1}}}
+\newcommand{\qq}[1]{``#1''}
+\newcommand{\N}[0]{\mathbb{N}}
+\newcommand{\natnum}[0]{\mathbb{N}}
+\newcommand{\UBF}[0]{(U, B, \mc{F})}
+\newcommand{\NUBF}[0]{\natnum_{\UBF}}
+
+\newacronym{fol}{\textbf{FOL}}{first-order logic}
+\newacronym{lfol}{\textbf{LFOL}}{language of first-order logic}
+\newacronym{zf}{ZF}{Zermelo-Fraenkel}
+
+
+\begin{document}
+	\title{Logic Notes}
+	\author{Justin Gerber}
+	\date{\today}
+	\maketitle
+	
+	
+	\section{Introduction}
+	
+	
+	\subsection{Overview}
+	
+	All of traditional mathematics can be expressed in terms of mathematical set theory.
+	Set theory is expressed in terms of a formal logic called \gls{fol} which is expressed in the \gls{lfol}.
+	The \gls{lfol} is a written formal language which means that is is composed of an explicitly and clearly defined set of symbols which constitutes the alphabet of that language and similarly explicitly and clearly defined syntax rules which identify \qq{appropriate} ways in which the symbols can be combined to form formulas.\footnote{Authors may refer to formulas as well-formed formulas (WFFs), sentences, or words.}
+	In addition to \gls{lfol}, \gls{fol} includes inference rules which, together, constitute a deductive calculus which allows us to \qq{deduce} new formulas from old formulas such that a chain of valid deductions is considered a proof of the final formula in the chain.
+	\gls{lfol} and the inference rules constitute \gls{fol}.
+	
+	A formal theory within a formal logic begins with a set of axioms which are a subset of the formulas of the formal language.
+	It is then possible, using the inference rules, to derive new formulas from these axioms using the inference rules.
+	The main question we ask about a formal theory is which formulas can be proven from the given axioms?
+	
+	The ultimate goal of this document is to state the \gls{zf} axioms which underpin mathematical set theory in the \gls{lfol} as well as to define and prove some basic concepts in set and number theory.
+	Though our goal is to formalize basic results in set and number theory, we will find we are philosophical forced to rely on \textbf{informal} definitions, understandings, and theorems of basic concepts related to set and number theory.
+	That is, we will find it is impossible to define or prove basic theorems even about \gls{lfol} without an understanding of basic properties of, e.g., the natural numbers, induction, and recursion.
+	
+	We will being with an exposition of the informal concepts need to build up \gls{fol} and \gls{lfol} including informal conceptions of objects, sets and set operations.
+	We will then introduce the informal notion of the natural numbers and move into a technical and detailed, but still informal, discussion of structural induction and the recursion theorem.
+	We will see that structural induction and recursion are essential to development of \gls{lfol} and \gls{fol}.
+	After a description of sequences of objects (finite lists) and their manipulations, we will be ready to lay out the syntax rules of \gls{lfol}.
+	
+	Once the syntax of \gls{lfol} is carefully described, we will be ready to introduce the idea of a logical system consisting of axioms and deduction rules used to syntactically prove theorem of the logical theory.
+	We will lay out the deduction rules for \gls{fol}.
+	A central goal of this work is give a technical proof that extensions by definition are conservative in \gls{fol}. 
+	After introducing the deduction and proof-building rules in \gls{fol}, we will be ready for a metalogical proof using structural induction and recursion, that extensions by definition are indeed conservative.
+	
+	With all of these preliminaries handled, we will finally be ready to introduce set theory as a specific theoretical instantiation within \gls{fol}.
+	Set theory will be \gls{fol} consisting of symbols necessary to describe sets together with the famous \gls{zf} axioms.
+	
+	\subsection{A Note on Syntax and Semantics}
+	
+	Two critical pillars within formal logic are syntax and semantics.
+	Syntax is encapsulates the formal rules described above regarding the alphabet of a formal language, the syntactic rules for combining symbols into formulas, and the inference rules for deriving new formulas from old.
+	In short, syntax describes the \qq{rules of the game} of formal logic.
+	Semantics is, crudely, the assigning of meaning to the symbols of the language.
+	In its simplest form, semantics is the assigning of truth values to formulas.
+	
+	Let's consider an example.
+	Suppose we would like to formalize the statement: If $m$ is a natural number and $m$ is odd then $m \div 2$ is a natural number.
+	In \gls{lfol} this expression might be formalized as\footnote{Here we use prefix notation so that $\in m \mathbb{N}$ formalizes that $m$ is contained in $\mathbb{N}$. This would be expressed in infix notation as $m\in \mathbb{N}$.}
+	\begin{equation*}
+		\forall m((\in m \mathbb{N} \land Om) \implies \in \div m 2 \mathbb{N})
+	\end{equation*}
+	
+	The smallest element in our formal language is the \textit{term}.
+	A term is one of three things: (1) a concrete object such as the number \qq{2}, (2) a variable into which concrete objects can be \qq{plugged in} such as \qq{$m$}, or (3) an $n$-ary function of other terms such as \qq{$\div m 2$}.
+	In fact, below we will express a concrete object as a 0-ary function.
+	The terms in the above expression are
+	\begin{align*}
+		&m\\
+		&\mathbb{N}\\
+		&m\\
+		&\div m 2\\
+		&m\\
+		&2\\
+		&\mathbb{N}
+	\end{align*}
+	Above I've included every term in the formula as it appears from left to right including repetitions of the same term.
+	The only variable which appears is \qq{$m$}.
+	We see that \qq{$2$} and \qq{$\mathbb{N}$} appear as 0-ary functions or constants.
+	We see that \qq{$\div$} appears as a 2-ary function with arguments \qq{$m$} and \qq{2} which are a variable and 0-ary function, respectively.
+	
+	The next larger element in our formal language is the \textit{atomic formula}.
+	An atomic formula is the combination of an $n$-ary predicate symbol and $n$ terms.
+	We have two predicate symbols in the above formula: \qq{$\in$} is a 2-ary predicate and \qq{$O$} is a 1-ary predicate symbol.
+	The atomic formulas are then
+	\begin{align*}
+		\mc{A} &\equiv \in m \mathbb{N}\\
+		\mc{B} &\equiv On\\
+		\mc{C} &\equiv \in \div m 2 \mathbb{N}
+	\end{align*}
+	Here $\mc{A}$, $\mc{B}$, and $\mc{C}$ are metalanguage symbols which stand for the corresponding formulas on the right sides of the $\equiv$ symbol.
+	
+	Finally, the next larger object in our language is the formula.
+	Atomic formulas themselves are already formulas, but we can form larger, more complex, formaulas by stringing together smaller formulas with connectives such as \qq{$\land$} and \qq{$\implies$} or quantifying with \qq{$\forall$}.
+	The formulas in the above expression are
+	\begin{align*}
+		&\forall m((\in m \mathbb{N} \land O m) \implies \in \div m 2 \mathbb{N})\\
+		&(\in m\mathbb{N}\land Om) \implies \in \div m 2 \mathbb{N}\\
+		&(\in m\mathbb{N} \land Om)\\
+		&\in m \mathbb{N}\\
+		&Om\\
+		&\in \div m 2 \mathbb{N}
+	\end{align*}
+	
+	The preceding discussion within this section has been a purely syntactic analysis of the formula in question.
+	That is, we broke the formula down into smaller parts within the formal language according to the syntax rules of the language.
+	In the following sections we will learn that the formula given above is indeed a valid formula within \gls{lfol}.
+	
+	Semantics enters the discussion when we give an \textit{interpretation} to the various expressions above.
+	For example, when we \textit{interpret} the symbol \qq{2} as the number 2, the expression \qq{$\div m 2$} as the division of the variable \qq{$m$} by the number \qq{2}, or the predicate \qq{$Om$} to mean that the variable $m$ is odd, we imposing semantics onto the expression.
+	We also are making a semantic interpretation any time we impose or deduce a truth value for a given formula.
+	For example, on all of the usual interpretations, we would assign a value of \qq{false} to the formula above because the odd natural numbers are, in fact, not divisible by 2.
+	
+	On goal of this document is to follow a game formalize approach to formal logic.
+	Game formalism is a philosophical point of view which holds that it is possible to describe set theory, and by extension, all of mathematics using only syntactic methods.
+	Or, more conservatively, at the very least, game formalism asks the question of how far one can get using such an approach.
+	To that end, I would like it to be clear that all definitions and arguments should be self-contained within purely syntactic analyses.
+	At a few times, I may make reference to semantic ideas, but this will only be to motivate and give intuition for syntactic definitions and manipulations.
+	Such references should be disposable with respect to the main focus of this work.
+	One could, instead, proceed by dropping semantics entirely from the narrative.
+	In such an approach, some definitions may appear unmotivated, at least at first, but that is not, technically, a problem for the game formalist.
+	
+	
+	\section{Informal Mathematics}
+	
+	The goal of this work is to carefully define \gls{lfol} and \gls{fol} so that we can eventually formally describe \gls{zf} set theory with \gls{fol} to serve as a foundation for the formalization of much of modern mathematics.
+	However, we will not be able to perform this task starting from nothing.
+	Indeed, to create this foundation for formal mathematics, we will find ourselves relying on \textit{informal} conceptions of various simple mathematical constructs such as the natural, or \qq{counting}, numbers.
+	
+	In this section I will outline these prerequisite informal mathematical concepts necessary for this project.
+	We will encounter various \qq{definitions} for informal concepts, but these definitions should not be taken as formally seriously as those that appear in later sections of this work or in formal mathematical texts.
+	These definitions should be thought of more like definitions of English words which are understood by speakers and listeners of the language and less like formal definitions which could, for example, be encoded on a computer.
+	
+	Furthermore, these informal definitions may closely mirror the definitions for their formal counterparts.
+	However, we would have a logical circularity problem if we required the formal concept of, e.g., a set to underpin the formal concept of a set.
+	Instead, we rely on informal definitions initially and formalize them later, when we have the requisite machinery in place.
+	
+	
+	\subsection{Informal Logic}
+	
+	\begin{informal definition}[Logic]
+		To build up our formal system of logic we will indeed require an informal system of logic.
+		It is necessary that we informally or intuitively understand concepts like
+		\begin{itemize}
+			\item{If $\mc{A}$ is true and $\mc{B}$ is true then \qq{$\mc{A}$ and $\mc{B}$} is true.}
+			\item{If $\mc{A}$ implies $\mc{C}$ and $\mc{B}$ implies $\mc{C}$ then if \qq{$\mc{A}$ or $\mc{B}$} is true then $\mc{C}$ is true.}
+		\end{itemize}
+	\end{informal definition}
+	
+	\begin{informal definition}[Object]
+		An object is a clearly definable and delineated entity.
+	\end{informal definition}
+	
+	\begin{informal definition}[Symbol]
+		A symbols is a type of object.
+		Written symbols are specific two-dimensional patterns depicted on two-dimensional surfaces like paper or screens.
+		We will typically use symbols from the English alphabet and numeral system as well as some punctuation symbols and brackets.
+	\end{informal definition}
+	
+	\begin{informal definition}[Object Equality]
+		Suppose the symbols $x$, $y$, and $z$ represent objects.
+		If $x$ and $y$ are the same object then we may write $x \equiv y$. Otherwise we write $x\not \equiv y$.
+		From this it (informally) follows that if $x\equiv y$ then $y \equiv x$ and that if $x \equiv y$ and $y \equiv z$ then $x \equiv z$.
+		We of course also always have that $x \equiv x$.
+	\end{informal definition}
+	
+	
+	\subsection{Informal Set Theory}
+	
+	\begin{informal definition}[Set]
+		A set is a collection of distinct objects.
+		If $x$, $y$, and $z$ are objects then the set containing these objects may be denoted as $\{a, b, c\}$.
+		Note that sets only enumerate distinct objects so if $x\equiv y$ then $\{x, y\}$ is the same set as $\{x\}$ and $\{y\}$.
+		
+		If a certain object $x$ is contained in a set $y$ then we denote this with the set membership symbol, $\in$ as $x \in y$.
+	\end{informal definition}
+	
+	\begin{informal definition}[Subset]
+		If $S$ and $T$ are sets and all elements that are contained in $S$ are also contained in $T$ then we say $S$ is a subset of $T$ and we denote this by $S \subset T$.
+		This can also be expressed by indicating that $x\in S$ implies $x \in T$.
+	\end{informal definition}
+	
+	\begin{informal definition}[Set Equality]
+		If $S$ and $T$ are sets and $S\subset T$ and $T\subset S$ then we say $S=T$.
+		From this it follows that
+		\begin{itemize}
+			\item{$S=S$}
+			\item{$S=T$ implies $T=S$}
+			\item{If $U$ is a third set that if $S=T$ and $T=U$ then $S=U$.}
+		\end{itemize}
+	\end{informal definition}
+	
+	\begin{informal definition}[The Empty Set]
+		There is a set which contains no elements which we denote by $\emptyset = \{\}$.
+	\end{informal definition}
+	
+	\begin{informal definition}[Subset Specification]
+		Suppose $S$ is a set.
+		Then we may extract a subset of $S$ by picking out all components of $s\in S$ which satisfy a certain property $\phi(s)$.
+		This specification set is denoted by
+		\begin{equation*}
+			\{s\in S: \phi(s)\}
+		\end{equation*}
+		
+		If we let
+		\begin{equation*}
+			T = \{s\in S: \phi(s)\}
+		\end{equation*}
+		the $s\in T$ if and only if $s\in S$ and $\phi(s)$.
+		
+		From this, if $\psi(r)$ is some other property we can also define
+		\begin{align*}
+			\{\psi(r) \in S: \phi(s)\} = \{s\in S: \text{There exists an } r \text{ such that } s = \psi(r) \text{ and } \phi(s)\}
+		\end{align*}
+	\end{informal definition}
+	
+	Note that sets constructed using subset specification are always subsets of a larger set $S$.
+	If we were to drop the constraint that the specification set is a subset of a larger set $S$ and allow sets of the form $\{x: \phi(x)\}$, i.e. to allow all objects $x$ satisfying a certain property $\phi(x)$ to form a set, then we open ourselves to the Russell paradox which we describe now.
+	
+	The Russell paradox considers the Russell \qq{set}
+	\begin{equation*}
+		R = \{x: x\not \in x\}
+	\end{equation*}
+	The paradox asks the question is $R\in R$?
+	If $R\in R$ then $R\not \in R$ because of what it means to be an element of $R$.
+	But if $R\not \in R$ then we have $R\in R$, again because of what it means to be an element of $R$.
+	With subset specification we avoid this by only specifying subsets of already well-behaved sets.
+	
+	Another type of pathology we must avoid in formal set theory is that of infinite descending sequences of sets.
+	That is, sets that satisfy something like $x\in y$ and $y\in x$ so that $y = \{x\} = \{\{y\}\} = \{\{\{x\}\}\} = \{\ldots \{x\} \ldots \}$.
+	In \gls{zf} set theory such constructions are avoided using the axiom of regularity.
+	In our informal setting we will not explicitly address this pathology.
+	Rather, we will just stick to considering simple enough objects that we know this isn't of concern to the informal theory.
+	
+	\begin{informal definition}[Set Union]
+		If $S$ is a collection of set $S$ then we may take the union over the elements of $S$.
+		This set denoted by $\bigcup S$ contains all the elements contained in the elements of $S$.
+		That is, $x \in \bigcup S$ if and only if there is a $y\in S$ with $x\in y$.
+		If $S$ contains two elements $T$ and $U$ then we write
+		$$
+		\bigcup S = \bigcup \{T, U\} = T \cup U
+		$$
+		If $S = \{s_0, \ldots, s_{n-1}\}$ then we may write
+		$$
+		\bigcup S = s_0 \cup \ldots \cup s_{n-1}
+		$$
+	\end{informal definition}
+	
+	\begin{informal definition}[Set Intersection]
+		If $S$ is a collection of sets then we define the intersection of the elements of $S$ to be the set whose elements are exactly those which are contained in each element of $S$.
+		$$
+		\bigcap S = \{x \in \bigcup S: \text{For each } y \in S \text{ we have } x \in y\}
+		$$
+		If $S$ has two elements so that $S = \{T, U\}$ then we write
+		$$
+		\bigcap S = \bigcap \{T, U\} = T \cap U
+		$$
+		If $S = \{s_0, \ldots, s_{n-1}\}$ then we may write
+		$$
+		\bigcap S = s_0 \cap \ldots \cap s_{n-1}
+		$$
+	\end{informal definition}
+	
+	\begin{informal definition}[Set Subtraction]
+		If $S$ and $T$ are sets then we may subtract $T$ from $S$ by collecting all the elements of $S$ which are not in $T$:
+		\begin{equation*}
+			S\setminus T = \{x \in S: x \not \in T\}
+		\end{equation*}
+	\end{informal definition}
+	
+	\begin{informal theorem}[Set Subtraction is Distributive Over Set Union]
+		Suppose $S_0, \ldots, S_{n-1}, T$ are sets.
+		We show that
+		\begin{equation*}
+			(S_0 \cup \ldots \cup S_{n-1}) \setminus T = (S_0 \setminus T) \cup \ldots \cup (S_{n-1} \setminus T)
+		\end{equation*}
+		Let $X = (S_0 \cup \ldots \cup S_{n-1}) \setminus T$ and $Y = (S_0 \setminus T) \cup \ldots \cup (S_{n-1} \setminus T)$.
+		We must show $X=Y$.
+		Suppose $x \in X$.
+		That means that (1) $x\not in T$ and (2) there is an $0 \le i < n$ with $x\in S_i$.
+		This means that for some $0 \le i < n$ we have $x\in (S_i \setminus T)$ so that $x\in Y$.
+		Now suppose $y\in Y$.
+		This means that for some $0 \le i < n$ we have $y\in (S_i \setminus T)$ which means $y \not \in T$ and $y\in S_i$.
+		This means $y\in (S_0 \cup \ldots S_{n-1})$ and since $y \not \in Y$ we have $y\in X$.
+		So we have $X = Y$.
+	\end{informal theorem}
+	
+	\begin{informal definition}
+		If $x$ and $y$ are objects then we create a new object called the ordered pair of $x$ and $y$ and denote it by $\braket{x, y}$.
+		Ordered pairs have the property that $\braket{x, y} = \braket{y, x}$ if and only if $x = y$.
+	\end{informal definition}
+	
+	\begin{informal definition}[Cartesian Product]
+		If $S$ and $T$ are two sets then we may construct a set which consists of all the ordered pairs whose first elements are contained in $S$ and whose second elements are contained in $T$.
+		This set is called the Cartesian product of $S$ and $T$ and is denoted by $S\times T$.
+		We have that $\braket{s, t} \in S\times T$ if and only if $s\in S$ and $t \in T$.
+	\end{informal definition}
+	
+	\begin{informal definition}[Relation]
+		If $S$ and $T$ are two sets then a relation $R$ between $S$ and $T$ is any subset of $S\times T$.
+		That is $R \subset S \times T$.
+		If $s\in S$ and $t\in T$ and $\braket{s, t} \in R$ then we say $s$ and $t$ are related by $R$ and we my write $Rst$ using direct prefix notation or $R(s, t)$ using prefix notation with parentheses for clarity, or $sRt$ for binary relations.
+	\end{informal definition}
+	
+	\begin{informal definition}[Domain and Image]
+		Suppose $R$ is a relation between $S$ and $T$ so that $R\subset S \times T$.
+		We define
+		\begin{align*}
+			\text{Dom}(R) =& \{s \in S: \text{There exist } t \in T \text{ such that } \braket{s, t} \in R\}\\
+			\text{Img}(R) =& \{t \in T: \text{There exist } s \in S \text{ such that } \braket{s, t} \in R\}
+		\end{align*}
+	\end{informal definition}
+	
+	\begin{informal definition}[Relation Restriction]
+		Suppose $R\subset S \times T$ is a relation.
+		Suppose $S' \subset S$.
+		We define a new relation
+		$$
+		R|_{S'} = \{\braket{s', t} \in R: s' \in S' \text{ and } t\in T\}
+		$$
+		$R|_{S'}$ is the restriction of $R$ to the possibly smaller set $S' \times T \subset S \times T$.
+		For $s' \in S'$ we have that $s'$ is related to the same elements of $T$ under $R|_{S'}$ as it is related to under $R$.
+	\end{informal definition}
+	
+	\begin{informal definition}[Total Relation]
+		A relation $R \subset S\times T$ is total if $\text{Dom}(R) = S$.
+	\end{informal definition}
+	
+	
+	\begin{informal definition}[Functional Relation]
+		A relation $R\subset S\times T$ is functional if for all $s\in S$ and $t, t'\in T$ that if $\braket{s, t}\in R$ and $\braket{s, t'}\in R$ then $t=t'$.
+		In other words each element $s\in S$ is related to \textit{at most} one element of $T$.
+		If $R$ is a functional relation then we say $R$ is a partial function.
+		We denote that $R \subset S\times T$ is a partial function by
+		$$
+		R: S \rightharpoonup T
+		$$
+		If $R$ is a partial function and $s \in \text{Dom}(R)$ then we denote the unique element $t\in T$ such that $\braket{s, t} \in R$ by $R(s)$ so that $R(s) \in T$ and $\braket{s, R(s)} \in R$.
+	\end{informal definition}
+	
+	\begin{informal definition}[Function]
+		If a relation $R \subset S \times T$ is a total and functional then we say $R$ is a function.
+		We denote this by
+		$$
+		R: S\to T
+		$$ 
+	\end{informal definition}
+	
+	\begin{informal definition}[All Functions from $S$ to $T$]
+		We let
+		$$
+		\text{Funcs}(S, T) = T^S = \{f \in \mathcal{P}(S\times T): f: S \to T\}
+		$$
+	\end{informal definition}
+	
+	\begin{informal definition}[Injective Function]
+		Suppose $f: S \to T$.
+		We say that $f$ is injective (or one-to-one) if for each $s, s' \in S$, we have that $f(s)=f(s')$ implies $s=s'$. 
+		That is, no two $s, s'\in S$ map to the same $t\in T$.
+	\end{informal definition}
+	
+	\begin{informal definition}[All Partial Functions from $S$ to $T$]
+		We let
+		$$
+		\text{ParFuncs}(S, T) = T^{\subset S} =  \{R \in \mathcal{P}(S\times T): R: S \rightharpoonup T\}
+		$$
+	\end{informal definition}
+	
+	\begin{definition}[Power Set]
+		If $S$ is a set then we denote the set of all subsets of $S$ by $\mc{P}(S)$.
+		Note that $\emptyset, S \in \mc{P}(S)$.
+	\end{definition}
+	
+	\subsection{Structural Induction}
+	
+	In this section we will take a deep diversion into structural induction and recursion. 
+	The \gls{lfol} will be defined recursively.
+	We will use this recursive structure in many metalogical proofs necessary in our development of \gls{lfol} and \gls{fol}.
+	
+	\begin{informal definition}[The Natural Numbers]
+		We require an informal understanding the natural numbers.
+		These are the counting numbers $0, 1, 2, \ldots$.
+		We denote the set of all natural numbers by $\natnum$.
+		We will require an understanding of simple relations like $<, \le, \ge, >, =$ on $\natnum$ as well as the addition binary function $+$.
+	\end{informal definition}
+	
+	\begin{informal definition}[The Set of Numbers $< n$]
+		We denote by $[n]$ the set of all natural numbers less than $n$
+		\begin{align*}
+			[n] = \{m\in\natnum: m < n\}
+		\end{align*}
+	\end{informal definition}
+	
+	\begin{informal definition}[Tuples]
+		An $n$-tuple over a set $S$ is a function from $[n]$ to $S$.
+	\end{informal definition}
+	
+	\begin{informal definition}[Multiple Cartesian Product]
+		If $S$ is a set and $n\in \natnum$ then we define $S^n$ as the set of all $n$-tuples over $S$:
+		\begin{align*}
+			S^n = S^{[n]}
+		\end{align*}
+		We will often denote elements of $S^n$ using boldface $\bv{s}\in S^n$.
+		To access the elements of the $n$-tuple $\bv{s}$ we can use usual function notation $\bv{s}(i)$ for $i\in [n]$. 
+		However, we will often use a subscript notation
+		\begin{align*}
+			\bv{s}_i = \bv{s}(i)
+		\end{align*}
+	\end{informal definition}
+		
+	\begin{informal definition}[$(U, B, F)$-inductive]
+		Suppose $U$ and $B$ are sets. Suppose that $F$ is a set of functions such that for each $f\in F$ we have $f: U^{n_f} \to U$ with $n_F \in \natnum$.
+		We call $B$ the base set and the function $f\in F$ the constructors.
+		
+		Now suppose $C\subset U$. 
+		We say that $C$ is $(U, B, F)$-inductive if 
+		\begin{itemize}
+			\item{$B\subset C$}
+			\item{For each $f\in F$, if $f:U^{n_f} \to U$, then if $\bv{c}\in C^{n_f}\subset U^{n_f}$ then $f(\bv{c}) \in C$.}
+		\end{itemize}
+		These conditions mean that the base set is a subset of $C$ and $C$ is closed under all $f\in F$.
+	\end{informal definition}
+	
+	\begin{informal theorem}[$U$ is $(U, B, F)$-Inductive]
+		We have, by definition, that $B\subset U$.
+		We also know that $\text{Img}(f) \subset U$ for each $f\in F$ so that if $f:U^{n_f}\to U$ and $\bv{u}^{n_f}\in U$ then $f(\bv{u})\in U$.
+	\end{informal theorem}
+	
+	\begin{informal definition}[$(U, B, F)$-inductive closure]
+		We define
+		\begin{align*}
+			\mc{C} = \{C\in \mc{P}(U): C \text{ is } (U, B, F)-\text{inductive}\}
+		\end{align*}
+		We then define the $(U, B, F)$-closure by
+		\begin{align*}
+			\natnum_{(U, B, F)} = \bigcap \mc{C}
+		\end{align*}
+	\end{informal definition}
+	
+	\begin{informal theorem}[$\natnum_{(U, B, F)}$ is $(U, B, F)$-Inductive]
+		We have that 
+		\begin{align*}
+			\natnum_{(U, B, F)} = \bigcap \mc{C}
+		\end{align*}
+		with 
+		\begin{align*}
+			\mc{C} = \{C\in \mc{P}(U): C \text{ is } (U, B, F)-\text{inductive}\}.
+		\end{align*}
+		Because each $C \in \mc{C}$ is $(U, B, F)$-inductive, we know that $B\subset C$. 
+		But since $B\subset C$ for each $C\in \mc{C}$, we have that
+		\begin{align*}
+			B \subset \bigcap \mc{C} = \natnum_{(U, B, F)}.
+		\end{align*}
+		Suppose $f\in F$ is a function $f:U^{n_f}\to U$. 
+		Now suppose $\bv{m} \in \natnum_{(U, B, F)}^{n_f}\subset U^{n_f}$ and consider $f(\bv{m})$.
+		Because each $C\in \mc{C}$ is $(U, B, F)$-inductive we have that $f(\bv{m}) \in C$.
+		But this means 
+		\begin{align*}
+			f(\bv{m}) \in \bigcap \mc{C} = \natnum_{(U, B, F)}
+		\end{align*}		
+	\end{informal theorem}
+	
+	\begin{informal theorem}[$\natnum_{(U, B, F)}$ is a Subset of Any $(U, B, F)$-Inductive Set]
+		By the definition of $\natnum_{(U, B, F)}$ as the intersection over all $(U, B, F)$ subsets of $U$, it immediately follows that $\natnum_{(U, B, F)}$ is a subset of any $(U, B, F)$ set.
+	\end{informal theorem}
+	
+	\begin{informal theorem}[Structural Induction Principle \#1]
+		The only structurally inductive subset of $\natnum_{(U, B, F)}$ is $\natnum_{(U, B, F)}$. 
+		Suppose $C \subset \natnum_{(U, B, F)}$ is $(U, B, F)$-inductive. 
+		By the previous theorem, because $C$ is $(U, B, F)$-inductive we must have $\natnum_{(U, B, F)} \subset C$ so that $C = \natnum_{(U, B, F)}$. 
+	\end{informal theorem}
+	
+	\begin{informal theorem}[Structural Induction Principle \#2]
+		Suppose $\phi$ is some property which satisfies
+		
+		\begin{itemize}
+			\item{for all $m\in B$ we have $\phi(m)$ holds}
+			\item{if, for all $f\in \mathcal{F}$ and $m\in \natnum_{(U, B, F)}^{n_f}$ and $i\in [n_f]$ assuming $\phi(\bv{m}_i)$ holds implies $\phi(f(\bv{m}))$ holds}
+		\end{itemize}
+		
+		then we can conclude $\phi$ holds for all $x\in \natnum_{(U, B, F)}$.
+		We prove this by constructing
+		\begin{align*}
+			C = \{m\in \natnum_{(U, B, F)}: \phi(m)\}
+		\end{align*}
+		We know that $C\subset \natnum_{(U, B, F)}$.
+		We also know $B\subset C$ and that if $\bv{m}\in C^{n_f}$ then $f(\bv{m})\in C$.
+		But these two conditions mean $C$ is inductive so, by the first induction principle, we have that $\natnum_{(U, B, F)} \subset C$ which implies $C = \natnum_{(U, B, F)}$.
+	\end{informal theorem}
+	
+	We will use the structural induction principle for the first time in the next proof.
+	
+	\begin{informal theorem}[Every element of $\natnum_{(U, B, F)}$ is either a base element or is constructed within $\natnum_{(U, B, F)}$.]
+		\label{infthm:allconstructed}
+		Suppose $m\in \natnum_{(U, B, F)}$.
+		We will prove, by induction, that $m\in B$ or there is an $f\in F$ with $m\in \text{Img}(f|_{\natnum_{(U, B, F)}})$.
+		
+		We consider
+		\begin{align*}
+			C = \{&m\in \natnum_{(U, B, F)}: m\in B\\
+			&\text{ or there exists } f\in F \text{ with } f: U^{n_f} \to U\\
+			&\text{ and there exists } \bv{c}\in \natnum_{(U, B, F)}^{n_f} \text{ such that } m = f(\bv{c})\}
+		\end{align*}
+		
+		We will show that $C\subset \natnum_{(U, B, F)}$ is inductive so that $C = \natnum_{(U, B, F)}$ by the induction principle.
+		
+		By the definition of $C$, it is clear that $m\in B$ implies $m\in C$ so that $B\subset C$.
+		
+		Now, consider each $f\in F$ with $f:U^{n_f} \to U$ and each $\bv{c}\in C^{n_f} \subset \natnum_{(U, B, F)}^{n_f}$.
+		Because $\natnum_{(U, B, F)}$ is inductive we know $f(\bv{c}) \in \natnum_{(U, B, F)}$.
+		But, by the definition of $C$, this means $f(\bv{c}) \in C$.
+		This means that $C$ is inductive which implies, by the induction principle, that $\natnum_{(U, B, F)} = C$.
+	\end{informal theorem}
+	
+	\begin{informal definition}[Freely-Generated]
+		\label{infdef:freegen}
+		Suppose $U$ is a set with a base set $B\subset U$ and that $F$ is a set of function where each $f\in F$ is a function $f:U^{n_f}\to U$ with $n_f \in \natnum$.
+		We have that $\natnum_{(U, B, F)}$ is the inductive closure of $B$ under $F$.
+		Suppose the following conditions hold
+		\begin{itemize}
+			\item{For each $f\in F$ suppose $f|_{\natnum_{(U, B, F)}}$ is injective}
+			\item{For each $f\in F$ suppose we have $\text{Img}\left(f|_{\natnum_{(U, B, F)}}\right) \cap B = \emptyset$}
+			\item{For each $f, g\in F$ suppose we have that $\text{Img}\left(f|_{\natnum_{(U, B, F)}}\right)\cap \text{Img}\left(g|_{\natnum_{(U, B, F)}}\right) = \emptyset$}
+		\end{itemize}
+		then we say that $\natnum_{(U, B, F)}$ is freely generated by $F$.
+	\end{informal definition}
+	
+	\begin{informal definition}[Unique Readability]
+		Suppose we have a set $U$, base set $B$, and a set of functions $F$ such that for each $f\in F$ we have $f:U^{n_f} \to U$ for some $n_f\in \natnum$. 
+		If all $c\in C$ satisfy exactly one of the following conditions, then we say $C$ exhibits unique readability.
+		\begin{itemize}
+			\item{$c\in B$ or}
+			\item{There exists a unique $f\in F$ with $f:U^{n_f}\to U$ and a unique $\bv{c}\in C^{n_f}$ such that $f(\bv{c}) = c$.}
+		\end{itemize}
+		In words, this says that either $c$ is in the base set $B$, or $c$ can be constructed using a unique constructor $f$ and a unique set of ``parent'' objects $\bv{c}$.
+	\end{informal definition}
+	
+	\begin{informal theorem}[Freely Generated Implies Unique Readability]
+		Consider $m\in \natnum_{(U, B, F)}$.
+		From Informal Theorem \ref{infthm:allconstructed} we know that either $m\in B$ or there exists an $f\in F$ with $m\in \text{Img}(f|_{\natnum_{(U, B, F)}})$.
+		But the definition of freely generated tells us that exactly one of these is the case. 
+		Furthermore, if $m\in \text{Img}(f|_{\natnum_{(U, B, F)}})$, then the definition of freely generated tells us that $m\not \in\text{Img}(g|_{\natnum_{(U, B, F)}})$ for any other $g\in F$.
+		Finally, since, by the definition of freely generated, $f|_{\natnum_{(U, B, F)}}$ is injective, we know that there is only one unique $\bv{c}\in \natnum_{(U, B, F)}^{n_f}$ such $m = f(\bv{c})$.
+	\end{informal theorem}
+	
+	\begin{informal definition}[Function Map]
+		Suppose $f: X\to Y$.
+		We define a relation $f^{(n)}\subset X^n \times Y^n$ by
+		\begin{align*}
+			f^{(n)} = \{\braket{\bv{x}, \bv{y}} \in X^n\times Y^n: \text{for each } i\in [n] \text{ we have } f(\bv{x}_i) = \bv{y}_i\}.
+		\end{align*}
+		We will prove that $f^{(n)}$ is a function.
+		First suppose $\bv{x}\in X^n$. 
+		We can define a function a $\bv{y}:[n] \to Y$ by $\bv{y}_i = f(\bv{x}_i)$.
+		We can then see $\braket{\bv{x}, \bv{y}} \in f^{(n)}$ so that $f^{(n)}$ is a total relation.
+		
+		Now suppose $\braket{\bv{x}, \bv{y}}, \braket{\bv{x'}, \bv{y}} \in f^{(n)}$.
+		For each $i\in [n]$ we have $\bv{y}_i = f(\bv{x}_i) = f(\bv{x}'_i)$.
+		But because $f$ is a function this means $\bv{x}_i = \bv{x}'_i$. This means $\bv{x} = \bv{x}'$ which means $f^{(n)}$ is a functional relation.
+		
+		We have that $f^{(n)}$ is a total functional relation so $f^{(n)}$ is a function $f^{(n)}:X^n \to Y^n$.
+		
+	\end{informal definition}
+		
+	\begin{informal theorem}[Structural Recursion Theorem]
+		Suppose $\natnum_{(U, B, F)}$ is freely generated by $F$.
+		Suppose also that there is a set $S$.
+		Suppose that there is a function $h_B:B \to S$ and for each $f\in F$ with $f:U^{n_f} \to U$ for some $n_f\in \natnum$, that there is a corresponding $\tilde{f}:S^n \to S$.
+		Under all of these suppositions, we will prove that there exists a unique function $h:\natnum_{(U, B, F)}\to S$ which satisfies
+		\begin{itemize}
+			\item{For each $b\in B$, $h(b) = h_B(b)$}
+			\item{For each $f\in F$ with $f:U^{n_f}\to U$ and for each $\bv{m}\in \natnum_{(U, B, F)}^{n_f}$, we have $h(f(\bv{m})) = \tilde{f}(h^{(n_f)}(\bv{m}))$.}
+		\end{itemize}
+		
+		We define a collection of relations $H$ by
+		\begin{align*}
+			H = \{A \in \mc{P}(\natnum_{(U, B, F)}\times S):&
+			\text{For each } m\in B \text{ we have } \braket{m, h_b(m)} \in A\\ 
+			&\text{ and  for each } f\in F \text{ with } f: U^{n_f} \to U \\
+			&\text{ and for each } \bv{m}\in \natnum_{(U, B, F)}^{n_f} \text{ and } \bv{s}\in S^{n_f}\\
+			&\text{ if for each } i \in [n_f] \text{ we have } \braket{\bv{m}_i, \bv{s}_i} \in A \text{ then }\\
+			&\braket{f(\bv{m}), \tilde{f}(\bv{s})} \in A\}
+		\end{align*}
+		If $A\in H$ then $A$ satisfies the structural elements we desire $h$ to satisfy.
+		We can see\footnote{We state this without proof. This comment is only important for intuition about the recursion theorem proof, it is not necessary for the actual proof.} that each $A\in H$ is a functional relation, but it might be the case that $A$ contains ``extra'' elements such that it is not a functional relation.
+		To eliminate these ``extra'' elements we define $h$ by the intersection over $H$:
+		\begin{align*}
+			h = \bigcap H.
+		\end{align*}
+		We see that $h$ is a relation between $\natnum_{(U, B, F)}$ and $S$.
+		We now must show that $h$ is a total functional relation.
+		
+		For $h$ to be a total relation we must have $\text{Dom}(h) = \natnum_{(U, B, F)}$. 
+		We will prove this by induction. 
+		We know that $\text{Dom}(h)\subset \natnum_{(U, B, F)}$ so, if we can show $\text{Dom}(h)$ is inductive then, by the induction principle, we know $\text{Dom}(h) = \natnum_{(U, B, F)}$.
+		First suppose $m\in B$. 
+		We know that for each $A \in H$ that $\braket{m, h_b(m)} \in A$.
+		This means $\braket{m, h_b(m)} \in h$ so that $m\in \text{Dom}(h)$.
+		Now, for the induction case, we consider $f\in F$ with $f:U^{n_f} \to U$ and $\bv{m}\in \text{Dom}(h)^{n_f}$.
+		If we can show $f(\bv{m}) \in \text{Dom}(h)$ then we will have proven $\text{Dom}(h)$ is inductive.
+		But if $\bv{m}\in \text{Dom}(h)^{n_f}$ this means that for each $i\in [n_f]$ that $m_i \in \text{Dom}(h)$ so that there is an $s_i \in S$ such that $\braket{m_i, s_i} \in h$.
+		But this means for each $A\in H$ that $\braket{m_i, s_i} \in A$.
+		We define $\bv{s}$ by $\bv{s}_i = s_i$.
+		By the definition of $H$, this all means that we must have, for each $A\in H$ that $\braket{f(\bv{m}), \tilde{f}(\bv{s})} \in A$.
+		This in turn implies $\braket{f(\bv{m}), \tilde{f}(\bv{s})} \in h$ so that $f(\bv{m}) \in \text{Dom}(h)$ concluding our proof that $\text{Dom}(h)\subset \natnum_{(U, B, F)}$ is inductive so that $\text{Dom}(h) = \natnum_{(U, B, F)}$.
+		From this we conclude that $h$ is a total relation.
+				
+		We now must show that $h$ is a functional relation.
+		We will proceed by induction.
+		We define
+		\begin{align*}
+			C = \{&m\in \natnum_{(U, B, F)}: h \text{ is functional on } m\}\\
+			= \{&m \in \natnum_{(U, B, F)}: \text{for all } s_1, s_2 \in S \text{ if } \braket{m, s_1} \in h\\
+			& \text{ and } \braket{m, s_2} \in h\text{ then } s_1 = s_2\}
+		\end{align*}
+		We will prove that $C$ is inductive which will imply, by the induction principle, that $C = \natnum_{(U, B, F)}$.
+		
+		First, suppose $m\in B$.
+		For each $A\in H$ we know that $\braket{m, h_b(m)} \in A$ which means $\braket{m, h_b(m)} \in h$.
+		Now consider $s\in S$ with $s\not=h_b(m)$.
+		Suppose $A\in H$ and $\braket{m, s}\in A$.
+		We know that $\braket{m, h_b(m)}\in A$ and $\braket{m, h_b(m)}\not=\braket{m, s}$.
+		By unique readability, we also know that $m$ is not in the range of an $f|_{\natnum_{(U, B, F)}}$ for any $f\in F$.
+		These two pieces of information allow us to conclude that $A/\braket{m, s} \in H$; the removal of $\braket{m, s}$ doesn't affect either of the two conditions for inclusion in $H$.
+		But this means that $\braket{m, s}\not \in h$.
+		We have then concluded that $\braket{m, s}$ is not in $h$ unless $s=h_b(m)$.
+		This implies $m\in C$ so that $B\subset C$.
+		This is the first condition to prove that $C$ is inductive.
+		
+		Before addressing the inductive case we first prove that $h \in H$.
+		We know that for $m\in B$ that $\braket{m, h_b(m)} \in A$ for each $A\in H$ which means $\braket{m, h_b(m)} \in h$.
+		We also know that if for each $f\in F$ and $\bv{m}\in \natnum_{(U, B, F)}^{n_f}$ and $\bv{s}\in S^{n_f}$ that if, for each $i \in [n_f]$ that $\braket{\bv{m}_i, \bv{s}_i} \in h$ then the same holds for each $A\in H$ which means $\braket{f(\bv{m}), \tilde{f}(\bv{s})}\in A$ for each $A\in H$ which in turn implies $\braket{f(\bv{m}), \tilde{f}(\bv{s})}\in h$. 
+		These two conditions mean $h$ satisfies the conditions so that $h\in H$.
+			
+		For the inductive case that $C$ is inductive, we consider $f\in F$ and  $\bv{m}\in C^{n_f}$.
+		Our goal is to show $f(\bv{m})\in C$.
+		$\bv{m}\in C^{n_f}$ means that for each $i\in [n]$ that $\bv{m}_i\in C$ which means there is a unique $s_i\in S$ such that $\braket{\bv{m}_i, s_i}\in h$.
+		Let $\bv{s} \in S^n$ be the tuple such that $\bv{s}_i = s_i$.
+		So we consider $f(\bv{m})$. Because $\braket{\bv{m}_i, \bv{s}_i} \in h$ for each $i\in [n]$ we also have, because $h\in H$, that $\braket{f(\bv{m}_i), \tilde{f}(\bv{s})} \in h$.
+		We now want to prove that if $\braket{f(\bv{m}_i), s}\in h$ then $s = \tilde{f}(\bv{s})$.
+		
+		Suppose $s \not = \tilde{f}(\bv{s})$.
+		Now consider $h' = h/\braket{f(\bv{m}), s}$.
+		By unique readability, we know $f(\bv{m}) \not\in B$.
+		We also know, by the induction assumption, that for each $i \in [n_f]$ that $\bv{s}_i\in S$ is the unique element such that $\braket{\bv{m}_i, \bv{s}_i} \in h$.
+		This means that for $h\in H$ we only require $\braket{f(\bv{m}), \tilde{f}(\bv{s}_i)} \in h$. 
+		This means we must still have $h' \in H$.
+		But since $h = \bigcap H$ this means $h' = h$.
+		But since $h' = h/\braket{f(\bv{m}_i), s} = h$ this means $\braket{f(\bv{m}), s}\not \in h$ which means that $\braket{f(\bv{m}), s}\in h$ only if $s = \tilde{f}(\bv{s})$. 
+		But this means that $h$ is functional on $f(\bv{m})$ which means $f(\bv{m}) \in C$.
+		Altogether this means that $C$ is inductive so that $C = \natnum_{(U, B, F)}$ which means that $h$ is functional over all of $\natnum_{(U, B, F)}$ which means that $h$ is a functional relation.
+		
+		We have proven that $h$ is a total functional relation, i.e. a function 
+		\begin{align*}
+			h: \natnum_{(U, B, F)} \to S.
+		\end{align*}
+		We have already seen that for $m\in B$ that $h(m) = h_B(m)$ so that $h|_B = h_B$.
+		
+		Suppose $f\in F$ and $\bv{m} \in \natnum_{(U, B, F)}^{n_f}$.
+		We know from the definition of $h$, $H$, and the discussions above that $h(f(\bv{m})) = \tilde{f}(\bv{s})$
+		where $\bv{s}_i = h(\bv{m}_i)$.
+		But this means $\bv{s} = h^{(n_f)}(\bv{m})$ so that $h(f(\bv{m})) = \tilde{f}(h^{(n_f)}(\bv{m}))$.
+	\end{informal theorem}
+	
+	\begin{informal theorem}[The Natural Numbers Are Inductive]
+		We have only given an informal definition of the natural numbers $\natnum$.
+		We can define the inductive closure $\natnum_{(\natnum, \{0\}, \{+_1\})}$.
+		That is, the base set only contains $0$ an the construction functions $F$ only consist of the addition operation which adds one to another integer.
+		In the formal theory we will in fact define the natural numbers as the inductive closure over some set with 0 as the only element in the base set and the successor operation $+_1$ as the only constructor function.
+		In the informal theory we will only, informally point out, that $\natnum_{(\natnum, \{0\}, \{+\})} = \natnum$.
+		In other words, $\natnum$ is structurally inductive so that the induction hypothesis and recursion theorem apply to $\natnum$.
+	\end{informal theorem}
+	
+	\section{Lists}
+	
+	Our formal language will consist of sequences of symbols.
+	We call such sequences strings.
+	We will require finite sequences of arbitrary length.
+	We will call a finite sequence a list.
+	We, informally, define this as follows.
+	
+	\begin{informal definition}[List]
+		Suppose $\Sigma$ is a set.
+		The set of all lists over $\Sigma$ is given by
+		\begin{align*}
+			\Sigma^* = \{\sigma \in \natnum\times \Sigma: \text{There exists an } n\in \natnum \text{ such that } \sigma: [n] \to \Sigma\}
+		\end{align*}
+		That is, a list over $\Sigma$ is a function from $[n] \to \Sigma$ for some $n\in\natnum$.
+	\end{informal definition}
+	
+	If $\{x_1, \lnot, Q, \curlywedge, (\} \subset \Sigma$ then an example of a list in $\Sigma^*$ is
+	$$
+	\{\braket{0, x_1}, \braket{1, \lnot}, \braket{2, Q}, \braket{3, \curlywedge}, \braket{4, (}\}
+	$$
+	We can abbreviate this expression by excluding the explicit numbering:
+	$$
+	[x_1, \lnot, Q, \curlywedge, (]
+	$$
+	Or we may just concatenate the symbols together:
+	$$
+	x_1 \lnot Q \curlywedge (
+	$$
+	
+	\begin{informal definition}[List Length]
+		We define a length function $\text{Len}:\Sigma^* \to \natnum$ by
+		\begin{align*}
+			\text{Len} = \{&z \in \Sigma^* \times \natnum: \text{there exists } \sigma \in \Sigma^* \text{ and there exists } n \in \natnum\\
+			& \text{ such that } \text{Dom}(\sigma) = [n] \text{ and } z = \braket{\sigma, n}\}
+		\end{align*}
+		We may notate for $\sigma \in \Sigma^*$
+		\begin{align*}
+			\text{Len}(\sigma) = |\sigma| = n
+		\end{align*}
+		Note that $|\sigma| \ge 0$.
+	\end{informal definition}
+	
+	\begin{informal definition}[The Empty List]
+		Note that the empty set $\emptyset$ is a function
+		\begin{align*}
+			\emptyset: \emptyset = [0] \to \Sigma.
+		\end{align*}
+		This means $\emptyset \in \Sigma^*$.
+		This means $\emptyset$ is an empty list. 
+		We denote the empty list by $e = \emptyset \in \Sigma^*$.
+	\end{informal definition}
+	
+	
+	\begin{informal definition}[Basic List Concatenation]
+		Suppose $\sigma, \sigma' \in \Sigma^*$.
+		We define a function $\circ: \Sigma^* \times \Sigma^* \to \Sigma^*$ as follows.
+		First $|\circ(\sigma, \sigma')| = |\sigma| + |\sigma'|$.
+		\begin{align*}
+			\circ(\sigma, \sigma')_i = \begin{cases}
+				\sigma_i \text{ for } 0 \le i < |\sigma|\\
+				\sigma'_{i-|\sigma|} \text{ for } |\sigma| \le i < |\sigma| + |\sigma'|.
+			\end{cases}
+		\end{align*}
+		We may denote concatenation using infix rather than prefix notation so that we have
+		\begin{align*}
+			\circ(\sigma, \sigma') =& \sigma \circ \sigma'\\
+			|\sigma \circ \sigma'| =& |\sigma| + |\sigma'|.
+		\end{align*}
+	\end{informal definition}
+	
+	\begin{informal theorem}[Basic List Concatenation is Associative]
+		Suppose $a, b, c \in \Sigma^*$. 
+		We will prove
+		\begin{align*}
+			(a \circ b) \circ c = a \circ (b \circ c).
+		\end{align*}
+		On the one hand, we have
+		\begin{align*}
+			((a \circ b) \circ c)_i =& \begin{cases}
+				(a \circ b)_i \text{ for } 0 \le i < |a| + |b|\\
+				c_{i - (|a| + |b|)} \text{ for } |a| + |b| \le i < |a| + |b| + |c|
+			\end{cases}\\
+			=& \begin{cases}
+				a_i \text{ for } 0\le i < |a|\\
+				b_{i - |a|} \text{ for } |a| \le i < |a| + |b|\\
+				c_{i - (|a| + |b|)} \text{ for } |a| + |b| \le i < |a| + |b| + |c|
+			\end{cases}
+		\end{align*}
+		where we have implicitly used $|a \circ b| = |a| + |b|$.
+		On the other hand we have
+		\begin{align*}
+			(a \circ (b \circ c))_i =& \begin{cases}
+				a_i \text{ for } 0 \le i < |a|\\
+				(b \circ c)_{i - |a|} \text{ for } |a| \le i < |a| + |b| + |c| 
+			\end{cases}\\
+			=& \begin{cases}
+				a_i \text{ for } 0 \le i < |a|\\
+				b_{i - |a|} \text{ for } 0 \le i - |a| < |b|\\
+				c_{i - |a| - |b|} \text{ for } |b| \le i - |a| < |b| + |c|\
+			\end{cases}\\
+			=& \begin{cases}
+				a_i \text{ for } 0 \le i < |a|\\
+				b_{i - |a|} \text{ for } |a| \le i < |a| + |b|\\
+				c_{i - (|a| + |b|)} \text{ for } |a| + |b| \le i < |a| + |b| + |c|
+			\end{cases}.
+		\end{align*}
+		
+		So that $((a \circ b) \circ c)_i = (a \circ (b \circ c))_i$ for all $0 \le i < |a| + |b| + |c|$ which means
+		\begin{align*}
+			(a \circ b) \circ c = a \circ (b \circ c).
+		\end{align*}
+	\end{informal theorem}
+	
+	We want to formalize the idea that, because $\circ$ is associative, if you have a sequence of lists such as $a, b, c, d, e$ and you are calculating
+	\begin{align*}
+		((((a \circ b) \circ c) \circ d) \circ e)
+	\end{align*}
+	Then it doesn't matter where you put the parenthesis so that you will get the same answer whether you do 
+	\begin{align*}
+		(a \circ (b \circ (c \circ (d\circ e))))
+	\end{align*}
+	or 
+	\begin{align*}
+		((a\circ b) \circ c) \circ (d \circ e)
+	\end{align*}
+	or some other ``parenthesization''. 
+	We will do this by defining the set of all ``parenthesizations'' of a length-$n$ list of lists and inductively demonstrating that the set of all ``parenthesization'' only contains a single unique element.
+	From this we will conclude that ``where you put the parentheses'' doesn't matter so will feel justified in dropping the parentheses and simply writing
+	\begin{align*}
+		a \circ b \circ c \circ d \circ e.
+	\end{align*}
+	
+	\begin{informal definition}[$\circ$-parenthesizations]
+		Suppose $S$ is a set and $\circ:S\times S \to s$ is an associative binary operation.\footnote{This condition makes $S$ a semigroup.}
+		we want a define a function 
+		\begin{align*}
+			P_{\circ}: S^* \to \mathcal{P}(S)
+		\end{align*}
+		such that if, e.g., $\sigma \in S^*$ and $\sigma = [s_0, s_1, s_2, s_3]$ then
+		\begin{align}
+			P_{\circ}(\sigma) = &\{\\
+				&(((s_0 \circ s_1) \circ s_2) \circ s_3)\\
+				&((s_0 \circ s_1) \circ (s_2 \circ s_3))\\	
+				&(s_0 \circ (s_1 \circ (s_2 \circ s_3)))\\
+				&((s_0 \circ (s_1 \circ s_2)) \circ s_3)\\
+				&(s_0 \circ ((s_1 \circ s_2) \circ s_3))\\				
+			&\}.
+		\end{align}
+		We will then show that all elements in $P_{\circ}(\sigma)$ are equal implying that all ``parenthesization'' of $\sigma$ under $\circ$ are equivalent.
+		We will proceed in steps to define $P_{\circ}(\sigma)$.
+		
+		Our first step is to define
+		\begin{align*}
+			P_{\circ}^n: S^n \to \mathcal{P}(S).
+		\end{align*}
+		We will then define $P_{\circ}(\sigma) = P_{\circ}^{|\sigma|}(\sigma)$.
+		To define $P_{\circ}^n$ we proceed recursively on $\natnum$ constructing a function
+		\begin{align*}
+			h: \natnum \to S^* \times \mathcal{P}(S)
+		\end{align*}
+		and we will then define $P_{\circ}^n = h(n)$ and show that $P_{\circ}^n$ is a function from $S^n \to \mathcal{P}(S)$.
+		Our inductive base for $\natnum$ is just the set containing 0: $\{0\}$.
+		We define $h_0(0) = \braket{e, \emptyset}$.
+		The only list of length 0 is the empty list and there are no parenthesization of this list.
+		We then define
+		\begin{align*}
+			h_+: S^* \times \mathcal{P}(S) \to S^* \times \mathcal{P}(S)
+		\end{align*}
+		by
+		\begin{align*}
+			h_+(s) = \{z \in S^* \times \mathcal{P}(S): \text{ for all } s\in S \text{ and for all } \sigma \in S^* \text{ adn for all } p \in \mathcal{P}(S)\bra\}
+		\end{align*}
+		
+		
+	
+	\end{informal definition}
+	
+	\begin{informal definition}[List Concatenation]
+		We will now recursively define a function called list concatenation. 
+		List concatenation takes a list of lists and returns a single lists consisting of the elements of each sub-list maintaining the order.
+		Our goal is to define $\bigcirc:\Sigma^{**} \to \Sigma^*$ such that
+		\begin{align*}
+			\bigcirc \left([a, b, c, d]\right) = 
+		\end{align*}
+		
+		
+		
+		We will give a recursive definition with $\natnum$ as the domain.
+		The range will be relations between $\Sigma^{**}$ and $\Sigma^*$.
+	\end{informal definition}
+	
+	\begin{definition}[Lists of Maximum Length]
+		Let
+		\begin{align*}
+			\Sigma^{\le n} =& \{\sigma \in \mathcal{P}(\mathbb{N} \to \Sigma): \text{There exists } m \in \mathbb{N} \text{ with } m \le n \text{ such that } \sigma: [m] \to \Sigma\}\\
+			=& \bigcup_{m=0}^n \Sigma^m
+		\end{align*}
+	\end{definition}
+	
+	\begin{definition}[List Element Extraction]
+		Suppose $\sigma \in \Sigma^n \subset \Sigma^*$ so that $|\sigma| = n$.
+		For $i \in [n]$ we may denote $\sigma(i) \equiv \sigma_i \equiv \sigma[i]$.
+	\end{definition}
+	
+	\begin{theorem}[List Equality]
+		Suppose $\sigma, \sigma' \in \Sigma^*$.
+		We have that $\sigma \equiv \sigma'$ if and only if $|\sigma| = |\sigma'|=n$ and for all $i \in [n]$ we have $\sigma_i \equiv \sigma'_i$.
+	\end{theorem}
+	
+	\begin{definition}[Empty List]
+		Recall that $\emptyset \in \Sigma^0$
+		We thus have that the empty list $\emptyset \in \Sigma^*$.
+		We denote the empty list by $e = \emptyset \in \Sigma^*$.
+	\end{definition}
+	
+	
+	\subsection{List Concatenation}
+	
+	\begin{definition}[List Concatenation]
+		Suppose $\sigma, \sigma' \in \Sigma^*$.
+		We define $\sigma \circ \sigma'$, the concatenation of $\sigma$ and $\sigma'$, as follows.
+		\begin{enumerate}
+			\item{$\sigma \circ \sigma':[|\sigma| + |\sigma'|] \to \Sigma$ so that $\sigma \circ \sigma' \in \Sigma^{|\sigma| + |\sigma'|}$ and $|\sigma \circ \sigma'| = |\sigma| + |\sigma'|$.}
+			\item{For $i \in |\sigma|$ we have $(\sigma\circ \sigma')_i \equiv \sigma_i$}
+			\item{For $i \in |\sigma'|$ we have $(\sigma\circ \sigma')_{|\sigma| + i} \equiv \sigma'_i$}
+		\end{enumerate}
+		
+		Note that we may write
+		$$
+		\sigma \circ \sigma' \equiv (\sigma \circ \sigma') \equiv \sigma \sigma' \equiv (\sigma \sigma')
+		$$
+		A consequence of this notation is that we may indicate the $i^{\text{th}}$ element of $\sigma \circ \sigma'$ as
+		$$
+		(\sigma \circ \sigma')_i \equiv (\sigma \sigma')_i
+		$$
+		Note that list concatenation can be thought of as a binary function on $\Sigma^*$
+		$$
+		\circ: \Sigma^* \times \Sigma^* \to \Sigma^*
+		$$
+	\end{definition}
+	
+	\begin{theorem}[Equality of Concatenation with List Implies Equality of Lists]
+		Suppose $\sigma, \sigma', \tau, \tau' \in \Sigma^*$.
+		If $\sigma\tau \equiv \sigma\tau'$ then $\tau \equiv \tau$ and if $\sigma \tau \equiv \sigma'\tau$ then $\sigma \equiv \sigma'$.
+		
+		Suppose $\sigma\tau \equiv \sigma\tau'$.
+		Consider $i \in [|\tau|]$.
+		We have that
+		$$
+		(\sigma\tau)_{|\sigma| + i} \equiv \tau_i \equiv (\sigma\tau')_{|\sigma|+i} \equiv \tau'_i
+		$$
+		Since this holds for all $i \in [|\tau|]$, this means that $\tau \equiv \tau'$
+		
+		Suppose $\sigma\tau \equiv \sigma' \tau$.
+		Consider $i \in [|\sigma|]$.
+		We have that
+		$$
+		(\sigma\tau)_i \equiv \sigma \equiv (\sigma'\tau)_i \equiv \sigma'_i
+		$$
+		Since this holds for $i \in [|\sigma|]$, this means that $\sigma \equiv \sigma'$.
+	\end{theorem}
+	
+	\begin{theorem}[Concatenation with the Empty List]
+		Suppose $\sigma \in \Sigma^*$.
+		Then $\sigma e = e \sigma = \sigma$.
+		
+		Suppose $|\sigma| = 0$ so that $\sigma = e$.
+		Then $\sigma e = e e = e \sigma$.
+		By the definition of concatenation, we know $|ee| = |e| + |e| = 0 + 0$ so we know $ee = e = \sigma$.
+		
+		Now suppose $|\sigma| > 0$.
+		We have $|e \sigma| = |e| + |\sigma| = |\sigma|$.
+		By the definition of concatenation, and because $|e| = 0$, we have that, for $i \in [|\sigma|]$, that $(e \sigma)_i = \sigma_i$.
+		But $i \in [|\sigma|]$ covers every entry in $e \sigma$ so we have $e\sigma = \sigma$.
+		We also have $|\sigma e| = |\sigma| + |e| = |\sigma|$.
+		By the definition of concatenation we have that for $i \in [|\sigma|]$ that $(\sigma e)_i = \sigma_i$.
+		But again, because $|e|=0$, $i \in [|\sigma|]$ covers all entries in $\sigma e$ so we see $\sigma e = \sigma$.
+	\end{theorem}
+	
+	\begin{definition}[List Slicing]
+		Here we define a partial function from $\textbf{Slice}:\Sigma^*\times (\mathbb{N} \times \mathbb{N}) \to \Sigma^*$ defined as follows.
+		Suppose $\braket{\sigma, \braket{i, j}} \in \Sigma^* \times (\mathbb{N} \times \mathbb{N})$.
+		The partial function $\textbf{Slice}$ is only defined if $0 \le i \le j$ and $j-i \le |\sigma|$.
+		If these conditions are satisfied then we define $\textbf{Slice}(\braket{\sigma, \braket{i, j}})$ to be the length $j-i$ element $\sigma' \in \Sigma^{j-i} \subset \Sigma^*$ satisfying $\sigma'_k = \sigma_{i+k}$ for each $0 \le k < j-i$.
+		We will often notate
+		$$
+		\sigma_{i:j} = \textbf{Slice}(\braket{\sigma, \braket{i, j}})
+		$$
+	\end{definition}
+	
+	\begin{theorem}[List Concatenation is Associative]
+		Suppose $\sigma, \tau, \rho \in \Sigma^*$.
+		Then $(\sigma \circ \tau) \circ \rho \equiv \sigma \circ (\tau \circ \rho)$.
+		
+		If $\sigma \equiv e$ then $(\sigma \circ \tau) \circ \rho \equiv \tau \circ \rho \equiv \sigma \circ (\tau \circ \rho)$.
+		If $\tau \equiv e$ then $(\sigma \circ \tau) \circ \rho \equiv \sigma \circ \rho \equiv \sigma \circ (\tau \circ \rho)$.
+		If $\rho \equiv e$ then $(\sigma \circ \tau) \circ \rho \equiv \sigma \circ \tau \equiv \sigma \circ (\tau \circ \rho)$.
+		
+		Now suppose $|\sigma|, |\tau|, |\rho|>0$.
+		We have that
+		$$
+		|(\sigma\tau)\rho| = |\sigma\tau| + |\rho| = |\sigma| + |\tau| + |\rho| = |\sigma| + |\tau \rho| = |\sigma(\tau\rho)|
+		$$
+		Let $i \in [|\sigma| + |\tau| + |\rho|]$.
+		We must consider three cases.
+		
+		\begin{itemize}
+			\item{First suppose $0 \le i < |\sigma|$.
+				Consider $(\sigma \tau) \rho$.
+				Since $i < |\sigma| \le |\sigma \tau|$ we have $((\sigma \tau)\rho)_i \equiv (\sigma \tau)_i$.
+				Because $0 \le i < |\sigma|$ we have have $(\sigma \tau)_i = \sigma_i$.
+				Then consider $\sigma (\tau\rho)$.
+				Because $0 \le i < |\sigma|$ we have $(\sigma(\tau\rho))_i = \sigma_i$.
+				So for $0 \le i < |\sigma|$ we see $((\sigma \tau) \rho)_i \equiv (\sigma (\tau \rho))_i$.}
+			\item{Now suppose $|\sigma| \le i < |\sigma| + |\tau| = |\sigma \tau|$.
+				Let $j = i - |\sigma|$ so that $0 \le j < |\tau|$.
+				Consider $(\sigma \tau) \rho$.
+				We have that $((\sigma \tau) \rho)_i \equiv (\sigma \tau)_i$.
+				Because $|\sigma| \le i$ we have $(\sigma \tau)_i = (\sigma \tau)_{j + |\sigma|} = \tau_j$.
+				Now consider $\sigma (\tau \rho)$.
+				We have $(\sigma (\tau \rho))_i \equiv (\sigma (\tau \rho))_{|\sigma| + j} \equiv (\tau \rho)_j$.
+				Because $j < |\tau|$ we have $(\tau \rho)_j = \tau_j$.
+				So for $|\sigma| \le i < |\sigma| + |\tau|$ we see $((\sigma \tau) \rho)_i \equiv (\sigma (\tau \rho))_i$.}
+			\item{Now suppose $|\sigma| + |\tau| = |\sigma \tau| \le i < |\sigma| + |\tau| + |rho|$.
+				Define $j = i - |\sigma| - |\tau|$ so that $ 0 \le j < |\rho|$.
+				Consider $(\sigma \tau) \rho$.
+				$((\sigma \tau) \rho)_i \equiv ((\sigma \tau) \rho)_{j + |\sigma| + |\tau|} \equiv \rho_j$.
+				Consider $\sigma (\tau \rho)$.
+				$(\sigma (\tau \rho))_i \equiv (\sigma (\tau \rho))_{|\sigma| + |\tau| + j} \equiv (\tau \rho)_{|\tau| + j} \equiv \rho_j$.
+				So for $|\sigma| + |\tau| \le i < |\sigma| + |\tau| + |\rho|$ we have $((\sigma \tau)\rho)_i \equiv (\sigma (\tau \rho))_i$.}
+		\end{itemize}
+		
+		Combining the three cases, we see that for $0 \le i < |\sigma| + |\tau| + |\rho| = |(\sigma \tau) \rho| = |\sigma (\tau \rho)|$ that $((\sigma \tau) \rho)_i \equiv (\sigma (\tau \rho))_i$ which implies $(\sigma \tau) \rho \equiv \sigma (\tau \rho)$.
+	\end{theorem}
+	
+	\subsection{Operations Over Lists}
+	
+	\begin{definition}[Binomial Operations over Lists]
+		Suppose $S$ is a set and $\circ:S\times S \to S$ is a binary operation on $S$.
+		Let $\mathbb{N}_{\ge 1} = \{n \in \mathbb{N}: n \ge 1\}$.
+		We recursively define, for each $n\in \mathbb{N}_{\ge 1}$ an operation $\circ_n:S^* \to \mathcal{P}(S)$.
+		We note that $\mathbb{N}_{\ge 1} = \mathbb{N}_{(\mathbb{N}, \{1\}, \{+_1\})}$ so that it is an inductive closure.
+		
+		We apply the recursion theorem with $\mathbb{N}_{\ge 1}$ as the inductive set that we recurse on and with $\mathcal{P}(S)^{\subset S^*}$, the set of all partial functions from $S^*$ into $\mathcal{P}(S)$, as the target set into which the recursively defined function points.
+		In other words we are recursively defining the function
+		$$
+		h: \mathbb{N}_{\ge 1} \to \mathcal{P}(S)^{\subset S^*}
+		$$
+		
+		In this case the family of functions on $\mathbb{N}_{\ge 1}$ is simply $\mathcal{F} = \{+_1\}$.
+		We must define the corresponding function $\tilde{+}_1: \mathcal{P}(S)^{\subset S^*} \to \mathcal{P}(S)^{\subset S*}$.
+		Suppose $f \in \mathcal{P}(S)^{\subset S^*}$.
+		Define $\tilde{+}_1(f)$ as follows.
+		For all $x \in \text{Dom}(f)$ define $(\tilde{+}_1(f))(x) = f(x)$.
+		For each $x\in S^*$ with $x\not \in \text{Dom}(f)$, if for each $n \in \natnum$ with $1 \le n < |x|$ if $x_{1:n}, x_{n:|x|} \in \text{Dom}(f)$ then define $(\tilde{+}_1(f))(x)$ as follows.
+		\begin{align*}
+			(\tilde{+}_1(f))(x) = \{y \in S:& \text{There exists } n \in \natnum \text{such that }\\
+			& 1 \le n < |x| \text{ and there exists }\\
+			& a \in f(x_{1:n}) \text{ and } b \in f(x_{n:|x|})\\
+			& \text{such that } y = a \circ b\}\\
+		\end{align*}
+		
+		For the recursion theorem we must also supply the target of the base set, $\{1\}$ in this case, within the target.
+		We define $h_{\{1\}}(1)$ to be the partial function defined on $S^1$, that is the length-1 lists of elements of $S$ and which is defined, for $A \in S^1$, by
+		$$
+		(h_{\{1\}}(1))(A) = \circ_1(A) = \{A_0\}
+		$$
+		That is, $\circ_1$ is the partial function which maps length-1 lists to the set containing the unique element of that list.
+		
+		The image of $+_1$ on $\mathbb{N}_{\ge 1}$ does not include 1 and $+_1$ is injective.
+		This all means that the recursion theorem applies.
+		This means that there exists a function $h: \mathbb{N}_{\ge 1} \to \mathcal{P}(S)^{\subset S^*}$ which satisfies
+		\begin{itemize}
+			\item{$h(1) = \circ_1$ as defined above}
+			\item{for $n \in \mathbb{N}_{\ge 1}$, we have $h(+_1(n)) = \tilde{+}_1(h(n))$.}
+		\end{itemize}
+		
+		We let $\circ_n = h(n)$.
+		
+	\end{definition}
+	
+	\begin{definition}[Multiple Concatenation]
+		Here we define the set of $n$-concatenations over a list of lists.
+		We will build up a function $\circ_*:(\Sigma^*)^* \to \mc{P}(\Sigma)$ out of smaller functions $\circ_n:(\Sigma^*)^{\le n} \to \mc{P}(\Sigma^*)$ for each $n \in \natnum$.
+		We will prove by induction that for each $n\in \natnum$ that there exists a function $\circ_n:(\Sigma^*)^{\le n} \to \mc{P}(\Sigma)$ which satisfies the following.
+		Suppose $A \in (\Sigma^*)^{\le n}$.
+		
+		\begin{itemize}
+			\item{If $|A| = 0$ then $\circ_n(A) = \emptyset$.}
+			\item{If $|A| = 1$ then $\circ_n(A) = \{A_0\}$.}
+			\item{If $|A| > 1$ then
+				\begin{align*}
+					\circ_n(A) = \{\tau \in \Sigma^*:& \exists m \in \mathbb{N} \text{ such that } 1 \le m < n \text{ and }\\
+					& \text{there exists } x \in \circ_n(A_{0:m}) \text{ and  }\\
+					& \text{there exists } y \in \circ_n(A_{m:|A|})\\
+					& \text{such that } \tau = x \circ y\}
+			\end{align*}}
+		\end{itemize}
+		
+		We will show also that for each
+	\end{definition}
+	
+	
+	\begin{theorem}[Associativity implies Generalized Associativity]
+	\end{theorem}
+	
+	
+\end{document}
